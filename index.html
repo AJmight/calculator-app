@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0e0e;
+      --panel: #1a1a1a;
+      --border: #2e2e2e;
+      --accent: #f0c040;
+      --accent2: #e05a2b;
+      --text: #e8e2d0;
+      --muted: #666;
+      --display-bg: #0a0a0a;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, #1c1c1c 39px, #1c1c1c 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, #1c1c1c 39px, #1c1c1c 40px);
+    }
+
+    .machine {
+      width: 380px;
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      box-shadow: 0 0 0 1px #333, 6px 6px 0 #000, 8px 8px 0 #111;
+      overflow: hidden;
+    }
+
+    .machine-header {
+      background: #111;
+      border-bottom: 2px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .machine-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 4px;
+      color: var(--accent);
+      text-shadow: 0 0 10px rgba(240,192,64,0.4);
+    }
+
+    .status-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .dot-r { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+    .dot-y { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .dot-g { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
+
+    .display-panel {
+      background: var(--display-bg);
+      border-bottom: 2px solid var(--border);
+      padding: 16px 18px 14px;
+    }
+
+    .expression-line {
+      font-size: 11px;
+      color: var(--muted);
+      min-height: 16px;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .result-line {
+      font-size: 36px;
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(240,192,64,0.5);
+      letter-spacing: 2px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s;
+      word-break: break-all;
+    }
+
+    .result-line.error {
+      color: var(--accent2);
+      font-size: 14px;
+      text-shadow: 0 0 8px rgba(224,90,43,0.5);
+    }
+
+    .body {
+      padding: 20px 18px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      background: #111;
+      border: 1px solid var(--border);
+      border-bottom: 2px solid var(--accent);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 18px;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(240,192,64,0.2);
+    }
+
+    .ops-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .ops-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .op-btn {
+      background: #111;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 1px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .op-btn:hover {
+      background: #1e1e1e;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .op-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0a0a0a;
+      box-shadow: 0 0 10px rgba(240,192,64,0.4);
+    }
+
+    .calculate-btn {
+      width: 100%;
+      background: var(--accent2);
+      border: none;
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 4px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+    }
+
+    .calculate-btn:hover {
+      background: #c94e22;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    }
+
+    .calculate-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+    }
+
+    .footer {
+      background: #111;
+      border-top: 2px solid var(--border);
+      padding: 8px 18px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #333;
+      text-align: center;
+    }
+
+    @keyframes flash {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+    .flash { animation: flash 0.3s ease; }
+  </style>
+</head>
+<body>
+
+<div class="machine">
+  <div class="machine-header">
+    <span class="machine-title">CALC-7000</span>
+    <div class="status-dots">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+    </div>
+  </div>
+
+  <div class="display-panel">
+    <div class="expression-line" id="expression">— READY —</div>
+    <div class="result-line" id="result">0</div>
+  </div>
+
+  <div class="body">
+    <div class="row">
+      <div>
+        <label>Input A</label>
+        <input type="number" id="num1" placeholder="0" step="any" />
+      </div>
+      <div>
+        <label>Input B</label>
+        <input type="number" id="num2" placeholder="0" step="any" />
+      </div>
+    </div>
+
+    <div class="ops-label">Operation</div>
+    <div class="ops-grid">
+      <button class="op-btn active" data-op="add">ADD</button>
+      <button class="op-btn" data-op="subtract">SUB</button>
+      <button class="op-btn" data-op="multiply">MUL</button>
+      <button class="op-btn" data-op="divide">DIV</button>
+      <button class="op-btn" data-op="modulo">MOD</button>
+      <button class="op-btn" data-op="power">POW</button>
+    </div>
+
+    <button class="calculate-btn" id="calcBtn">EXECUTE</button>
+  </div>
+
+  <div class="footer">FLASK CALCULATOR v1.0 // ARITHMETIC ENGINE</div>
+</div>
+
+<script>
+  let selectedOp = 'add';
+
+  document.querySelectorAll('.op-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedOp = btn.dataset.op;
+    });
+  });
+
+  document.getElementById('calcBtn').addEventListener('click', calculate);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') calculate();
+  });
+
+  async function calculate() {
+    const num1 = document.getElementById('num1').value;
+    const num2 = document.getElementById('num2').value;
+    const resultEl = document.getElementById('result');
+    const exprEl = document.getElementById('expression');
+
+    if (num1 === '' || num2 === '') {
+      showError('ENTER BOTH INPUTS');
+      return;
+    }
+
+    try {
+      const res = await fetch('/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ num1, num2, operation: selectedOp })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error.toUpperCase());
+        return;
+      }
+
+      resultEl.classList.remove('error');
+      resultEl.classList.add('flash');
+      setTimeout(() => resultEl.classList.remove('flash'), 300);
+      resultEl.textContent = data.result;
+      exprEl.textContent = data.expression;
+
+    } catch (err) {
+      showError('CONNECTION ERROR');
+    }
+  }
+
+  function showError(msg) {
+    const resultEl = document.getElementById('result');
+    resultEl.classList.add('error', 'flash');
+    resultEl.textContent = '! ' + msg;
+    setTimeout(() => resultEl.classList.remove('flash'), 300);
+    document.getElementById('expression').textContent = '— ERROR —';
+  }
+</script>
+
+</body>
+</html>
