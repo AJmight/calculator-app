@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = "postgresql://postgres:ygQgMlcYpcNVneFIblORFtiUeoWagDFT@postgres.railway.internal:5432/railway"
 
 conn = psycopg2.connect(DATABASE_URL)
 cur = conn.cursor()
