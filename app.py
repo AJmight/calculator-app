@@ -1,6 +1,25 @@
+import os
+import psycopg2
+
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
+
+DATABASE_URL = "postgresql://postgres:ygQgMlcYpcNVneFIblORFtiUeoWagDFT@postgres.railway.internal:5432/railway"
+
+conn = psycopg2.connect(DATABASE_URL)
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS calculations (
+    id SERIAL PRIMARY KEY,
+    num1 FLOAT,
+    num2 FLOAT,
+    operation TEXT,
+    result TEXT
+)
+""")
+conn.commit()
 
 @app.route('/')
 def index():
@@ -49,6 +68,12 @@ def calculate():
         result_str = str(int(result))
     else:
         result_str = f"{result:.10g}"
+
+    cur.execute(
+        "INSERT INTO calculations (num1, num2, operation, result) VALUES (%s, %s, %s, %s)",
+        (num1, num2, operation, result_str)
+    )
+    conn.commit()
 
     return jsonify({
         'result': result_str,
